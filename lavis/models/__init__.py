@@ -12,15 +12,7 @@ from lavis.common.registry import registry
 
 from lavis.models.base_model import BaseModel
 
-from lavis.models.albef_models.albef_classification import AlbefClassification
-from lavis.models.albef_models.albef_feature_extractor import AlbefFeatureExtractor
-from lavis.models.albef_models.albef_nlvr import AlbefNLVR
-from lavis.models.albef_models.albef_pretrain import AlbefPretrain
-from lavis.models.albef_models.albef_retrieval import AlbefRetrieval
-from lavis.models.albef_models.albef_vqa import AlbefVQA
-from lavis.models.alpro_models.alpro_qa import AlproQA
-from lavis.models.alpro_models.alpro_retrieval import AlproRetrieval
-
+# --- BLIP models ---
 from lavis.models.blip_models.blip import BlipBase
 from lavis.models.blip_models.blip_caption import BlipCaption
 from lavis.models.blip_models.blip_classification import BlipClassification
@@ -31,67 +23,34 @@ from lavis.models.blip_models.blip_pretrain import BlipPretrain
 from lavis.models.blip_models.blip_retrieval import BlipRetrieval
 from lavis.models.blip_models.blip_vqa import BlipVQA
 
-from lavis.models.blip2_models.blip2 import Blip2Base
-from lavis.models.blip2_models.blip2_opt import Blip2OPT
-from lavis.models.blip2_models.blip2_t5 import Blip2T5
-from lavis.models.blip2_models.blip2_qformer import Blip2Qformer
-from lavis.models.blip2_models.blip2_image_text_matching import Blip2ITM
-
-from lavis.models.blip2_models.blip2_t5_instruct import Blip2T5Instruct
-from lavis.models.blip2_models.blip2_vicuna_instruct import Blip2VicunaInstruct
-from lavis.models.blip2_models.blip2_vicuna_xinstruct import Blip2VicunaXInstruct
-
-from lavis.models.blip_diffusion_models.blip_diffusion import BlipDiffusion
-
+# --- PNP-VQA models ---
 from lavis.models.pnp_vqa_models.pnp_vqa import PNPVQA
 from lavis.models.pnp_vqa_models.pnp_unifiedqav2_fid import PNPUnifiedQAv2FiD
-from lavis.models.img2prompt_models.img2prompt_vqa import Img2PromptVQA
+
+# --- Supporting Models ---
 from lavis.models.med import XBertLMHeadDecoder
 from lavis.models.vit import VisionTransformerEncoder
-from lavis.models.clip_models.model import CLIP
-
-from lavis.models.gpt_models.gpt_dialogue import GPTDialogue
 
 from lavis.processors.base_processor import BaseProcessor
 
-from lavis.models.qacap_models.qavit_encoder import *
 
 __all__ = [
     "load_model",
-    "AlbefClassification",
-    "AlbefFeatureExtractor",
-    "AlbefNLVR",
-    "AlbefVQA",
-    "AlbefPretrain",
-    "AlbefRetrieval",
-    "AlproQA",
-    "AlproRetrieval",
+    "load_model_and_preprocess",
     "BaseModel",
     "BlipBase",
     "BlipFeatureExtractor",
     "BlipCaption",
     "BlipClassification",
-    "BlipDiffusion",
     "BlipITM",
     "BlipNLVR",
     "BlipPretrain",
     "BlipRetrieval",
     "BlipVQA",
-    "Blip2Qformer",
-    "Blip2Base",
-    "Blip2ITM",
-    "Blip2OPT",
-    "Blip2T5",
-    "Blip2T5Instruct",
-    "Blip2VicunaInstruct",
-    "Blip2VicunaXInstruct",
     "PNPVQA",
-    "Img2PromptVQA",
     "PNPUnifiedQAv2FiD",
-    "CLIP",
     "VisionTransformerEncoder",
     "XBertLMHeadDecoder",
-    "GPTDialogue",
 ]
 
 
