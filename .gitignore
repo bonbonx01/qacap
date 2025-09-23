@@ -63,4 +63,5 @@ results/
 *.old
 *.swp
 *.swo
+*.pyc 
 *~
