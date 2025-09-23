@@ -7,19 +7,11 @@
 
 from lavis.common.registry import registry
 from lavis.tasks.base_task import BaseTask
-from lavis.tasks.image_text_pretrain import ImageTextPretrainTask
-from lavis.tasks.multimodal_classification import (
-    MultimodalClassificationTask,
-)
-from lavis.tasks.retrieval import RetrievalTask
-from lavis.tasks.vqa import VQATask, GQATask, AOKVQATask, DisCRNTask
-from lavis.tasks.vqa_reading_comprehension import VQARCTask, GQARCTask
-from lavis.tasks.dialogue import DialogueTask
-from lavis.tasks.text_to_image_generation import TextToImageGenerationTask
+from lavis.tasks.vqa import VQATask, AOKVQATask
 
 
 def setup_task(cfg):
-    assert "task" in cfg.run_cfg, "Task name must be provided."
+    assert "task" in cfg.run_cfg, "Task name must be provided in run config."
 
     task_name = cfg.run_cfg.task
     task = registry.get_task_class(task_name).setup_task(cfg=cfg)
@@ -30,18 +22,6 @@ def setup_task(cfg):
 
 __all__ = [
     "BaseTask",
-    "AOKVQATask",
-    "RetrievalTask",
-    "CaptionTask",
     "VQATask",
-    "GQATask",
-    "VQARCTask",
-    "GQARCTask",
-    "MultimodalClassificationTask",
-    # "VideoQATask",
-    # "VisualEntailmentTask",
-    "ImageTextPretrainTask",
-    "DialogueTask",
-    "TextToImageGenerationTask",
-    "DisCRNTask"
-]
+    "AOKVQATask",
+    ]

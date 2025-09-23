@@ -11,6 +11,7 @@ from typing import Dict
 
 from omegaconf import OmegaConf
 from lavis.common.registry import registry
+print("Available datasets:", list(registry.mapping["builder_name_mapping"].keys()))
 
 
 class Config:
@@ -95,9 +96,13 @@ class Config:
         dataset_config = OmegaConf.create()
 
         for dataset_name in datasets:
+            print(f"Processing dataset: {dataset_name}")  # 调试信息
+        
             builder_cls = registry.get_builder_class(dataset_name)
-
+            print(f"Builder class: {builder_cls}")  # 调试信息
+        
             dataset_config_type = datasets[dataset_name].get("type", "default")
+            print(f"Config path: {dataset_config_path}") 
             dataset_config_path = builder_cls.default_config_path(
                 type=dataset_config_type
             )
