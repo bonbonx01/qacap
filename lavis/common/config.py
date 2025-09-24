@@ -102,7 +102,7 @@ class Config:
             print(f"Builder class: {builder_cls}")  # 调试信息
         
             dataset_config_type = datasets[dataset_name].get("type", "default")
-            print(f"Config path: {dataset_config_path}") 
+            # print(f"Config path: {dataset_config_path}") 
             dataset_config_path = builder_cls.default_config_path(
                 type=dataset_config_type
             )

@@ -256,7 +256,27 @@ class BaseTask:
     @staticmethod
     def save_result(result, result_dir, filename, remove_duplicate=""):
         import json
-
+        import torch
+    
+        def convert_tensor_to_python(obj):
+            """递归转换字典/列表中的Tensor为Python原生类型"""
+            if isinstance(obj, torch.Tensor):
+                # 如果是标量张量，转为Python数值
+                if obj.numel() == 1:
+                    return obj.item()
+                # 否则转为列表
+                return obj.cpu().tolist()
+            elif isinstance(obj, dict):
+                return {key: convert_tensor_to_python(value) for key, value in obj.items()}
+            elif isinstance(obj, list):
+                return [convert_tensor_to_python(item) for item in obj]
+            elif isinstance(obj, tuple):
+                return tuple(convert_tensor_to_python(item) for item in obj)
+            else:
+                return obj
+    
+        # 转换result中的所有Tensor
+        result = convert_tensor_to_python(result)
         result_file = os.path.join(
             result_dir, "%s_rank%d.json" % (filename, get_rank())
         )

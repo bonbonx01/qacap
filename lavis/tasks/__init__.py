@@ -7,8 +7,7 @@
 
 from lavis.common.registry import registry
 from lavis.tasks.base_task import BaseTask
-from lavis.tasks.vqa import VQATask, AOKVQATask
-
+from lavis.tasks.vqa import VQATask, AOKVQATask, GQATask
 
 def setup_task(cfg):
     assert "task" in cfg.run_cfg, "Task name must be provided in run config."
@@ -24,4 +23,5 @@ __all__ = [
     "BaseTask",
     "VQATask",
     "AOKVQATask",
+    "GQATask",
     ]

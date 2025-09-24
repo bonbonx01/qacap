@@ -20,11 +20,11 @@ datasets:
           url:
             - https://storage.googleapis.com/sfr-vision-language-research/LAVIS/datasets/gqa/testdev_balanced_questions.json
           storage:
-            - /home/n702/data_ext1/tx/gqa/qustions/testdev_balanced_questions.json.1
+            - /home/n702/data_ext1/tx/gqa/qustions/testdev_balanced_questions.json
         test:
           url:
               - https://storage.googleapis.com/sfr-vision-language-research/LAVIS/datasets/gqa/test_balanced_questions.json
           storage:
-              - /home/n702/data_ext1/tx/gqa/qustions/test_balanced_questions.json.1
+              - /home/n702/data_ext1/tx/gqa/qustions/test_balanced_questions.json
       images:
           storage: /home/n702/data_ext1/tx/gqa/images

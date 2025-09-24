@@ -17,17 +17,16 @@ class GQABuilder(BaseDatasetBuilder):
 
     DATASET_CONFIG_DICT = {
         "default": "configs/datasets/gqa/defaults.yaml",
-        "balanced_val": "configs/datasets/gqa/balanced_val.yaml",
-        "balanced_testdev": "configs/datasets/gqa/balanced_testdev.yaml",
+        "balanced_testdev": "configs/datasets/gqa/balanced_testdev.yaml"
     }
 
-@registry.register_builder("gqa_instruct")
-class GQAInstructBuilder(BaseDatasetBuilder):
-    train_dataset_cls = GQAInstructDataset
-    eval_dataset_cls = GQAEvalDataset
+# @registry.register_builder("gqa_instruct")
+# class GQAInstructBuilder(BaseDatasetBuilder):
+#     train_dataset_cls = GQAInstructDataset
+#     eval_dataset_cls = GQAEvalDataset
 
-    DATASET_CONFIG_DICT = {
-        "default": "configs/datasets/gqa/defaults_instruct.yaml",
-        "balanced_val": "configs/datasets/gqa/balanced_val_instruct.yaml",
-        "balanced_testdev": "configs/datasets/gqa/balanced_testdev_instruct.yaml",
-    }
+#     DATASET_CONFIG_DICT = {
+#         "default": "configs/datasets/gqa/defaults_instruct.yaml",
+#         "balanced_val": "configs/datasets/gqa/balanced_val_instruct.yaml",
+#         "balanced_testdev": "configs/datasets/gqa/balanced_testdev_instruct.yaml",
+#     }

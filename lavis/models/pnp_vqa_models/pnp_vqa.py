@@ -15,9 +15,7 @@ from transformers import T5ForConditionalGeneration
 from lavis.models.pnp_vqa_models import prepare_qa_input
 from lavis.models.blip_models.blip_image_text_matching import compute_gradcam
 from transformers.modeling_outputs import CausalLMOutputWithCrossAttentions
-import torch.nn.functional as F
-import re
-from difflib import SequenceMatcher
+
 
 @registry.register_model("pnp_vqa")
 class PNPVQA(BaseModel):
@@ -53,10 +51,10 @@ class PNPVQA(BaseModel):
         self.question_answering_model = question_answering_model
         self.offload_model = offload_model
 
-    def forward_itm_origin(self, samples, block_num=7):
+    def forward_itm(self, samples, block_num=7):
         """
         Args:
-            samples (dict): A diwctionary containing the following keys:
+            samples (dict): A dictionary containing the following keys:
                 - image (torch.Tensor): A tensor of shape (batch_size, 3, H, W)
                 - text_input (list): A list of strings of length batch_size
             block_num (int): The index of cross-attention block for gradcam computation.
@@ -83,128 +81,7 @@ class PNPVQA(BaseModel):
 
         return samples
 
-    def forward_itm(self, samples):
-        """
-            调用 QAVitEncoder
-        """
-        question_aware_features = self.image_question_matching_model(samples)
-        
-        # 将提取出的特征存入 samples 字典
-        samples["qa_features"] = question_aware_features
-
-        return samples
-
     def forward_cap(
-        self,
-        samples,
-        cap_max_length=20,
-        cap_min_length=0,
-        top_p=1,
-        top_k=50,
-        repetition_penalty=1.0,
-        num_captions=30,  # 减少数量，提高质量
-        diversity_penalty=0.5,  # 新增：多样性惩罚
-        use_question_guidance=True,  # 新增：是否使用问题引导
-    ):
-        """
-        优化的caption生成方法
-        利用问题感知特征和智能采样策略
-        """
-
-        # 如果 qa_features 存在，则使用它；否则，对图像进行编码
-        encoder_out = samples.get('qa_features', self.image_captioning_model.forward_encoder(samples))
-        batch_size = encoder_out.size(0)
-
-        # --- 1. Prompt 增强 ---
-        base_prompt = self.image_captioning_model.prompt
-        if use_question_guidance and 'text_input' in samples:
-            enhanced_prompts = [
-                f"{base_prompt} about {', '.join(PNPVQA.extract_question_keywords(q))}" 
-                if PNPVQA.extract_question_keywords(q) else base_prompt
-                for q in samples['text_input']
-            ]
-        else:
-            enhanced_prompts = [base_prompt] * batch_size
-        
-        # --- 2. 基于 GradCAMs 选择 Top-K 相关的图像块 ---
-        num_patches = min(40, encoder_out.size(1))  # 每次看最重要的40个图像块
-        if 'gradcams' in samples and samples['gradcams'] is not None:
-            patch_indices = torch.topk(samples['gradcams'], k=num_patches, dim=1).indices
-            # 调整索引以匹配特征维度 (B, N, D)
-            patch_indices = patch_indices.unsqueeze(-1).expand(-1, -1, encoder_out.size(2))
-            encoder_out_sample = torch.gather(encoder_out, 1, patch_indices)
-        else:
-            # 如果没有 gradcams，则使用全部图像块特征
-            encoder_out_sample = encoder_out
-
-        # --- 3. 为每个样本独立生成 captions ---
-        final_captions = [[] for _ in range(batch_size)]
-    
-        for i in range(batch_size):
-        # 获取单个样本的特征
-            single_encoder_out = encoder_out_sample[i:i+1]  # (1, num_patches, dim)
-            image_atts = torch.ones(single_encoder_out.size()[:-1], dtype=torch.long).to(single_encoder_out.device)
-        
-            # 准备prompt
-            prompt_tokens = self.image_captioning_model.tokenizer(
-                [enhanced_prompts[i]], return_tensors="pt"
-            ).to(single_encoder_out.device)
-            prompt_tokens.input_ids = prompt_tokens.input_ids[:, :-1]
-            
-            # 使用 beam search 生成多个 captions
-            decoder_out = self.image_captioning_model.text_decoder.generate(
-                input_ids=prompt_tokens.input_ids,
-                attention_mask=prompt_tokens.attention_mask,
-                encoder_hidden_states=single_encoder_out,
-                encoder_attention_mask=image_atts,
-                max_length=cap_max_length,
-                min_length=cap_min_length,
-                num_beams=num_captions,
-                num_return_sequences=num_captions,  # 返回 num_captions 条不同的序列
-                do_sample=False,  # Beam Search 是确定性的
-                repetition_penalty=repetition_penalty,
-                length_penalty=1.0,  # 长度惩罚
-                early_stopping=True,
-                eos_token_id=self.image_captioning_model.tokenizer.sep_token_id,
-                pad_token_id=self.image_captioning_model.tokenizer.pad_token_id,
-            )
-            
-            outputs = self.image_captioning_model.tokenizer.batch_decode(decoder_out, skip_special_tokens=True)
-            
-            # 过滤和去重
-            unique_caps = []
-            for out in outputs:
-                cap = out[len(enhanced_prompts[i]):].strip()
-                if cap and not PNPVQA.is_caption_duplicate(cap, unique_caps):
-                    unique_caps.append(cap)
-            
-            final_captions[i] = unique_caps
-        
-        samples['captions'] = final_captions
-        return samples
-
-    @staticmethod
-    def is_caption_duplicate(new_caption, existing_captions, threshold=0.8):
-        """检查caption是否重复"""
-        from difflib import SequenceMatcher
-        
-        for existing in existing_captions:
-            similarity = SequenceMatcher(None, new_caption.lower(), existing.lower()).ratio()
-            if similarity > threshold:
-                return True
-        return False
-
-    @staticmethod
-    def extract_question_keywords(question):
-        """简单的问题关键词提取"""
-        import re
-        # 移除标点和常见停用词
-        cleaned = re.sub(r'[^\w\s]', '', question.lower())
-        stop_words = {'what', 'is', 'are', 'the', 'this', 'that', 'how', 'where', 'when', 'why', 'who'}
-        words = [w for w in cleaned.split() if w not in stop_words and len(w) > 2]
-        return words[:3]  # 返回前3个关键词
-
-    def forward_cap_origin(
             self,
             samples,
             cap_max_length=20,
@@ -409,34 +286,7 @@ class PNPVQA(BaseModel):
             0
         ), "The number of questions must be equal to the batch size."
 
-        # 从数据加载器获取原始问题字符串
-        question_list = samples["text_input"]
-
-        # 使用 T5 分词器处理字符串列表
-        qa_tokenizer = self.question_answering_model.tokenizer
-        tokenized_output = qa_tokenizer(
-            question_list,
-            padding="longest",
-            truncation=True,
-            max_length=32, # 长度可调
-            return_tensors="pt"
-        ).to(self.question_answering_model.device)
-
-        instruction_tokens = tokenized_output.input_ids
-        instruct_masks = tokenized_output.attention_mask # <-- instruct_masks 在此诞生
-
-        # 使用 T5 的编码器进行嵌入和上下文编码
-        t5_encoder = self.question_answering_model.t5_model.get_encoder()
-        instruct_states = t5_encoder(
-            input_ids=instruction_tokens,
-            attention_mask=instruct_masks
-        ).last_hidden_state # <-- instruct_states 在此诞生
-        
-        # 将生成的指令 Tensors 添加回 samples 字典，以便所有子模块都能访问
-        samples['instruct_states'] = instruct_states
-        samples['instruct_masks'] = instruct_masks
-        
-        samples = self.forward_itm(samples)
+        samples = self.forward_itm(samples, block_num=block_num)
 
         samples = self.forward_cap(samples,
                                    cap_max_length=cap_max_length,
@@ -464,10 +314,8 @@ class PNPVQA(BaseModel):
         if self.offload_model:
             self.image_question_matching_model.to(self.question_answering_model.device)
             self.image_captioning_model.to(self.question_answering_model.device)
-        
-        gradcams_to_return = samples.get("gradcams", None)  # 安全地获取gradcams，如果不存在则返回None
-
-        return pred_answers, samples['captions'], gradcams_to_return
+            
+        return pred_answers, samples['captions'], samples['gradcams']
 
     @classmethod
     def from_config(cls, model_config):

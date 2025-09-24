@@ -27,6 +27,7 @@ from lavis.models.blip_models.blip_vqa import BlipVQA
 from lavis.models.pnp_vqa_models.pnp_vqa import PNPVQA
 from lavis.models.pnp_vqa_models.pnp_unifiedqav2_fid import PNPUnifiedQAv2FiD
 
+from lavis.models.qacap_models.qavit_encoder import *
 # --- Supporting Models ---
 from lavis.models.med import XBertLMHeadDecoder
 from lavis.models.vit import VisionTransformerEncoder
