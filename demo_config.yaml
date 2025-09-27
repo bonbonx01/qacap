@@ -1,0 +1,52 @@
+# QA-ViT + PNP-VQA 演示配置文件
+
+model:
+  arch: pnp_vqa_qavit
+  model_type: base
+  
+  # 图像描述模型配置
+  image_captioning_model:
+    arch: blip_caption
+    model_type: base_coco
+    
+  # 问答模型配置  
+  question_answering_model:
+    arch: pnp_unifiedqav2_fid
+    model_type: base
+    
+  # QA-ViT 配置
+  qavit_model:
+    vit_model: "openai/clip-vit-base-patch32"
+    vit_layer: -1
+    vit_type: "qavit" 
+    instruction_dim: 768
+    integration_point: "all"
+    
+  # 文本编码器配置
+  text_encoder:
+    arch: bert
+    model_type: base
+
+# 预处理配置
+preprocess:
+  vis_processor:
+    train:
+      name: "blip_image_train"
+      image_size: 384
+    eval:
+      name: "blip_image_eval" 
+      image_size: 384
+      
+  text_processor:
+    train:
+      name: "blip_question"
+    eval:
+      name: "blip_question"
+
+# 推理配置
+inference:
+  num_captions: 10
+  num_patches: 20
+  block_num: 7
+  cap_max_length: 20
+  cap_min_length: 5
