@@ -1,0 +1,41 @@
+# QA-ViT enhanced PNP-VQA configuration file
+model:
+  arch: pnp_vqa_qavit
+  model_type: base
+  
+  # Image captioning model configuration
+  image_captioning_model:
+    arch: blip_caption
+    model_type: base_coco
+    
+  # Question answering model configuration  
+  question_answering_model:
+    arch: pnp_unifiedqa_v2_fid
+    model_type: base
+    
+  # QA-ViT specific configuration
+  qavit_config:
+    vit_model: "openai/clip-vit-base-patch16"
+    vit_layer: -1  # Use last layer
+    vit_type: "qavit"  # Use QA-ViT instead of standard CLIP
+    integration_point: "all"  # Integrate at all layers
+    instruction_dim: 768  # BERT hidden dimension
+    
+  # Text encoder configuration
+  text_encoder:
+    arch: "bert-base-uncased"
+    
+preprocessors:
+  vis_processor:
+    train:
+      name: "blip_image_train"
+      image_size: 384
+    eval:
+      name: "blip_image_eval" 
+      image_size: 384
+      
+  text_processor:
+    train:
+      name: "blip_caption"
+    eval:
+      name: "blip_caption"
