@@ -1,0 +1,107 @@
+# QA-ViT + PnP-VQA Model Configuration Example
+# This configuration shows how to set up the QA-ViT enhanced PnP-VQA model
+
+model:
+  arch: pnp_vqa_qavit
+  model_type: base
+  
+  # Image Captioning Model (BLIP)
+  image_captioning_model:
+    arch: blip_caption
+    model_type: base_coco
+    load_finetuned: True
+    finetuned: "https://storage.googleapis.com/sfr-vision-language-research/BLIP/models/model_base_capfilt_large.pth"
+    image_size: 384
+    vit_med_config: "configs/models/med_large_config.json"
+    prompt: "a picture of "
+    
+  # Question Answering Model (T5-based FiD)
+  question_answering_model:
+    arch: pnp_unifiedqav2_fid
+    model_type: base
+    load_finetuned: True
+    finetuned: "https://storage.googleapis.com/sfr-vision-language-research/LAVIS/models/PNP-VQA/pnp_vqa_unifiedqav2_fid_base.pth"
+    t5_model: "google/flan-t5-base"
+    max_txt_len: 128
+    
+  # Text Encoder for QA-ViT (BERT-based)
+  text_encoder:
+    arch: bert_base
+    model_name: "bert-base-uncased"
+    
+  # QA-ViT Configuration
+  qavit_config:
+    # Vision Transformer configuration
+    hidden_size: 768
+    intermediate_size: 3072
+    num_hidden_layers: 12
+    num_attention_heads: 12
+    num_channels: 3
+    image_size: 224
+    patch_size: 16
+    layer_norm_eps: 1e-5
+    attention_dropout: 0.0
+    initializer_range: 0.02
+    initializer_factor: 1.0
+    
+    # QA-ViT specific parameters
+    instruction_dim: 768  # Must match text encoder dimension
+    integration_point: "all"  # Options: all, early, late, late2, late3, sparse
+    projection_size: "base"
+    
+    # Vision processing
+    do_resize: true
+    do_center_crop: true
+    do_normalize: true
+    image_mean: [0.48145466, 0.4578275, 0.40821073]
+    image_std: [0.26862954, 0.26130258, 0.27577711]
+
+# Training/Inference parameters
+run:
+  seed: 42
+  lr: 1e-5
+  min_lr: 0
+  warmup_lr: 1e-8
+  weight_decay: 0.05
+  max_epoch: 10
+  batch_size_train: 16
+  batch_size_eval: 64
+  num_workers: 4
+  accum_grad_iters: 1
+  
+  # VQA specific parameters
+  inference_method: "generate"
+  num_beams: 1
+  max_len: 20
+  min_len: 0
+  num_captions: 50
+  num_captions_fid: 1
+  cap_max_length: 20
+  cap_min_length: 10
+  top_k: 50
+  top_p: 1.0
+  repetition_penalty: 1.0
+  num_patches: 50
+  block_num: 7  # Which attention layer to use for gradcam
+  
+  # Device and optimization
+  device: "cuda"
+  world_size: 1
+  dist_url: "env://"
+  distributed: True
+  evaluate: True
+  
+datasets:
+  vqav2_test:
+    vis_processor:
+      train:
+        name: "blip_image_train"
+        image_size: 384
+      eval:
+        name: "blip_image_eval"
+        image_size: 384
+    txt_processor:
+      train:
+        name: "blip_question"
+      eval:
+        name: "blip_question"
